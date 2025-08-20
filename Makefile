@@ -12,8 +12,8 @@ CFLAGS := -O2 -MMD -MP
 all: $(TARGET)
 
 $(TARGET): $(OBJ_FILES)
-	@echo "\033[94m"Linking $@ from $< "\033[0m"
-	$(CC) $< -o $@ $(LD_FLAGS)
+	@echo "\033[94m"Linking $@ from $(OBJ_FILES) "\033[0m"
+	$(CC) $(OBJ_FILES) -o $@ $(LD_FLAGS)
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
 	@mkdir -p $(dir $@)

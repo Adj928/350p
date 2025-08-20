@@ -4,3 +4,4 @@ build/
 .doxygen
 compile_commands.json
 doc
+*.350
