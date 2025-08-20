@@ -1,0 +1,6 @@
+build/
+.cache
+.clangd
+.doxygen
+compile_commands.json
+doc
