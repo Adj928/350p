@@ -27,11 +27,11 @@ typedef uint8_t Frame[PAGE_SIZE];
  * overwritten by another page).  A page can also be completely unallocated (at first)
  */
 typedef enum FrameState {
-  PAGE_UNALLOCATED = 0,
-  PAGE_UNPINNED_CLEAN = 1,
-  PAGE_UNPINNED_DIRTY = 2,
-  PAGE_PINNED_CLEAN   = 3,
-  PAGE_PINNED_DIRTY   = 4,
+  FRAME_UNALLOCATED = 0,
+  FRAME_UNPINNED_CLEAN = 1,
+  FRAME_UNPINNED_DIRTY = 2,
+  FRAME_PINNED_CLEAN   = 3,
+  FRAME_PINNED_DIRTY   = 4,
 } FrameState;
 
 /**

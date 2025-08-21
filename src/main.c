@@ -21,6 +21,8 @@ int main(int argc, char **argv) {
   Frame **registers;
 
   while (1) {
+    printf(">>");
+    fflush(stdout);
     int ret = scanf("%c", &cmd);
     if (ret == EOF) {
       return 0;
@@ -42,7 +44,7 @@ int main(int argc, char **argv) {
       CHECK_ERROR(ret, "Error initializing buffer manager");
 
       registers = calloc(register_count, sizeof(Frame *));
-      CHECK_ERROR(registers != NULL, "Error initializing test registers");
+      CHECK_ERROR(registers == NULL, "Error initializing test registers");
 
       initialized = 1;
       printf("Buffer manager initialized\n");
@@ -75,6 +77,8 @@ int main(int argc, char **argv) {
         CHECK_ERROR(ret <= 0, "Error reading write data");
         len_read += ret;
       }
+
+      printf("Frame at register %u written\n", target_register);
     } break;
 
     case 'r': {
