@@ -1,6 +1,6 @@
-## Project 1: Buffer Manager
+## Project 0: Paging API
 
-In this project, you will implement a buffer manager.
+In this project, you will implement the page access methods that subsequent projects will use
 
 - **Handout**: https://git.odin.cse.buffalo.edu/CSE-350/2025-fa-project
 - **Submission**: https://autolab.cse.buffalo.edu/courses/cse350-f25/assessments/File-API
