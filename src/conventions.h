@@ -23,4 +23,13 @@ typedef enum Result {
 /// The identifier for a specific page
 typedef uint64_t PageID;
 
+#ifndef PAGE_SIZE
+/// The typical size of a page
+/// May be overridden by -DPAGE_SIZE
+#define PAGE_SIZE 1024
+#endif
+
+/// A standard Frame
+typedef uint8_t Frame[PAGE_SIZE];
+
 #endif
