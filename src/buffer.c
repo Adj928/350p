@@ -29,7 +29,7 @@ Result buffer_init(BufferManager *manager, FILE *file, uint64_t frame_count) {
 ///     - If an UNALLOCATED frame is available, use this first
 ///     - If an UNPINNED_CLEAN frame is available, use this next
 ///     - If an UNPINNED_DIRTY frame is available, flush the frame (See
-///     `flush_frame`), and then use it
+///     `buffer_flush_frame`), and then use it
 ///     - If all frames are in a PINNED_* state, return an error
 /// - If an existing frame is storing page_id:
 ///     - If the existing frame is currently Unpinned and Clean, return that
@@ -76,7 +76,7 @@ Result buffer_unpin(BufferManager *manager, Frame *frame) {
 ///
 /// All pages in the UNPINNED_DIRTY state should be flushed to disk and moved
 /// into the UNPINNED_CLEAN state
-Result flush_unpinned(BufferManager *manager) {
+Result buffer_flush_unpinned(BufferManager *manager) {
   // TODO
   return ERROR;
 }
@@ -89,7 +89,7 @@ Result flush_unpinned(BufferManager *manager) {
 /// at the appropriate page position
 /// - If the provided page is in a *_CLEAN state, do nothing and return SUCCESS
 /// - If the provided page is UNALLOCATED, return an error
-Result flush_frame(BufferManager *manager, Frame *frame) {
+Result buffer_flush_frame(BufferManager *manager, Frame *frame) {
   // TODO
   return ERROR;
 }

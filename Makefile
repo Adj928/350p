@@ -26,7 +26,7 @@ run: $(TARGET)
 
 test: $(TARGET)
 	@echo "\033[94mRunning tests...\033[0m"
-	@echo TBD
+	./$(TARGET) < tests/test_1
 
 doc: .doxygen $(SRC_FILES)
 	@echo "\033[94mBuilding docs\033[0m"
