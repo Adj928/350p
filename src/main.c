@@ -67,7 +67,7 @@ int main(int argc, char **argv) {
         ret = page_write(db_file, target_page, temp_frame);
         CHECK_ERROR(ret, "Error writing page");
 
-        printf("WRITE_FRAME");
+        printf("WRITE_FRAME\n");
       } break;
 
       case 'R': {
@@ -93,10 +93,9 @@ int main(int argc, char **argv) {
         printf("FLUSH\n");
       } break;
       }
-
-      ret = fclose(cmd_file);
-      CHECK_ERROR(ret, "Error closing files");
     }
+    int ret = fclose(cmd_file);
+    CHECK_ERROR(ret, "Error closing files");
   }
 
   return 0;
