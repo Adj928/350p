@@ -54,5 +54,5 @@ Available commands include
 
 #### Submission and Late Policy
 
-Upload `src/file.c` to Autolab.  You may submit as many times as you like before the deadline.  You may submit for up to 48 hours after the deadline, but each partial day over the deadline consumes a grace day if you have any remaining, or reduces your grade by 25% of the maximum (7.5 pt) if you do not.  
+Upload `src/file.c` to Autolab.  You may submit as many times as you like before the deadline.  You may submit for up to 48 hours after the deadline, but each partial day over the deadline consumes a grace day if you have any remaining, or reduces your grade by 25% of the maximum (2.5 pt) if you do not.  
 
