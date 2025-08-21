@@ -44,7 +44,7 @@ You may define additional functions, structures, types, etc... as needed.  Howev
 
 #### Testing
 
-The main function for this project implements a toy REPL that you may use for testing.  A simple example may be found in `tests/0.test`.  After you run this test, the file `database.350` should contain exactly 32 lines of 31 underscores, followed by a like number of hyphens and dashes each.
+The main function for this project implements a toy REPL that you may use for testing.  A simple example may be found in `tests/0.test`.  After you run this test, the file `database.350` should contain exactly 32 lines of 31 underscores, followed by a like number of hyphens and asterisks each.
 
 
 Available commands include
