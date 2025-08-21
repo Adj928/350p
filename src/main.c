@@ -26,7 +26,7 @@
 
 /// @brief Entrypoint
 int main(int argc, char **argv) {
-  FILE *db_file = fopen(DB_FILE, "r+");
+  FILE *db_file = fopen(DB_FILE, "w+");
   CHECK_ERROR(!db_file, "Error opening db");
 
   char cmd;
