@@ -28,7 +28,7 @@ run: $(TARGET)
 
 test: $(TARGET)
 	@echo "\033[94mRunning tests...\033[0m"
-	@for i in $(TESTS); do echo "\033[94m  $$i\033[0m"; ./$(TARGET) < $$i; done
+	@for i in $(TESTS); do echo "\033[94m  $$i\033[0m"; ./$(TARGET) $$i; done
 
 doc: .doxygen $(SRC_FILES)
 	@echo "\033[94mBuilding docs\033[0m"
