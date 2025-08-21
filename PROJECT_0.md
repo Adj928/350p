@@ -16,10 +16,15 @@ This project will be scored out of 10 points and is worth 10% of the overall pro
     - `fread`
     - `fwrite`
     - `fseek`
-- Principles in Data Management Chapter 1.3
+- Principles in Data Management Chapter 1
 
-Note that:
-- `fread` and `fwrite` are NOT guaranteed to read or write the full amount.  
+Note that `fread` and `fwrite` are NOT guaranteed to read or write the full amount.  
+
+You may use any function provided in a standard LIBC header file, including:
+- `<stdio.h>`
+- `<stdlib.h>`
+
+As a reminder, you may **not** use coding assistants on this project.
 
 #### Working with C
 
