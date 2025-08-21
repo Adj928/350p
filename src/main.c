@@ -26,7 +26,7 @@
 
 /// @brief Entrypoint
 int main(int argc, char **argv) {
-  FILE *db_file = fopen(DB_FILE, "a+");
+  FILE *db_file = fopen(DB_FILE, "r+");
   CHECK_ERROR(!db_file, "Error opening db");
 
   char cmd;
@@ -55,8 +55,6 @@ int main(int argc, char **argv) {
 
       ret = page_write(db_file, target_page, temp_frame);
       CHECK_ERROR(ret, "Error writing page");
-
-      printf("PAGE_WRITE\n");
     } break;
 
     case 'R': {
@@ -65,10 +63,14 @@ int main(int argc, char **argv) {
       ret = scanf("%lu", &target_page);
       CHECK_ERROR(ret < 0, "Error parsing target page");
 
-      ret = page_read(db_file, target_page, temp_frame);
-      CHECK_ERROR(ret, "Error writing page");
+      printf("BEGIN PAGE_READ\n");
+      for (uint64_t i = 0; i < PAGE_SIZE; i++) {
+        putc(temp_frame[i], stdout);
+      }
+      printf("\nEND PAGE_READ\n");
 
-      printf("PAGE_READ\n");
+      ret = page_read(db_file, target_page, temp_frame);
+
     } break;
 
     case 'f': {
