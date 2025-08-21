@@ -14,7 +14,7 @@
  * default to 4098
  */
 #ifndef PAGE_SIZE
-#define PAGE_SIZE 4098
+#define PAGE_SIZE 1024
 #endif
 
 /**
@@ -89,6 +89,6 @@ Result buffer_init(BufferManager *manager, FILE *file, uint64_t frame_count);
 Result buffer_pin(BufferManager *manager, PageID page_id, Frame **frame);
 Result buffer_mark(BufferManager *manager, Frame *frame);
 Result buffer_unpin(BufferManager *manager, Frame *frame);
-Result flush_unpinned(BufferManager *manager);
-Result flush_frame(BufferManager *manager, Frame *frame);
+Result buffer_flush_unpinned(BufferManager *manager);
+Result buffer_flush_frame(BufferManager *manager, Frame *frame);
 #endif

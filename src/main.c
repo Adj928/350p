@@ -7,6 +7,21 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+/// @brief Utility macro for handling error checking
+/// @param check The test to see if there is an error.
+/// @param message The message to print if there is an error.
+///
+/// This macro does not return
+#define CHECK_ERROR(check, message)                                            \
+  if (check) {                                                                 \
+    if (errno) {                                                               \
+      perror(message);                                                         \
+    } else {                                                                   \
+      fprintf(stderr, "%s\n", message);                                        \
+    }                                                                          \
+    exit(-1);                                                                  \
+  }
+
 #define DB_FILE "database.350"
 
 /// @brief Entrypoint
@@ -21,7 +36,7 @@ int main(int argc, char **argv) {
   Frame **registers;
 
   while (1) {
-    printf(">>");
+    // printf(">>");
     fflush(stdout);
     int ret = scanf("%c", &cmd);
     if (ret == EOF) {
@@ -47,7 +62,7 @@ int main(int argc, char **argv) {
       CHECK_ERROR(registers == NULL, "Error initializing test registers");
 
       initialized = 1;
-      printf("Buffer manager initialized\n");
+      printf("INIT\n");
     } break;
 
     case 'p': {
@@ -55,13 +70,24 @@ int main(int argc, char **argv) {
       PageID target_page = 0;
 
       ret = scanf("%u %lu", &target_register, &target_page);
-      CHECK_ERROR(ret < 0, "Error parsing frame count");
+      CHECK_ERROR(ret < 0, "Error parsing pin arguments");
 
       ret = buffer_pin(&manager, target_page, &registers[target_register]);
       CHECK_ERROR(ret, "Error pinning page");
 
-      printf("Page %lu pinned to register %u\n", target_page, target_register);
-    }
+      printf("PIN\n");
+    } break;
+
+    case 'u': {
+      unsigned int target_register = 0;
+      ret = scanf("%u", &target_register);
+      CHECK_ERROR(ret < 0, "Error parsing unpin arguments");
+
+      ret = buffer_unpin(&manager, registers[target_register]);
+      CHECK_ERROR(ret, "Error unpinning page");
+
+      printf("UNPIN\n");
+    } break;
 
     case 'w': {
       unsigned int target_register = 0;
@@ -71,14 +97,14 @@ int main(int argc, char **argv) {
       CHECK_ERROR(registers[target_register] == NULL,
                   "Target register is not in use");
 
-      for (uint64_t len_read = 0; len_read < PAGE_SIZE;) {
-        ret =
-            fread(*registers[target_register], 1, PAGE_SIZE - len_read, stdin);
+      for (uint64_t i = 0; i < PAGE_SIZE; i++) {
+        ret = scanf("%c", &(*registers[target_register])[i]);
         CHECK_ERROR(ret <= 0, "Error reading write data");
-        len_read += ret;
       }
 
-      printf("Frame at register %u written\n", target_register);
+      buffer_mark(&manager, registers[target_register]);
+
+      printf("WRITE\n");
     } break;
 
     case 'r': {
@@ -89,9 +115,18 @@ int main(int argc, char **argv) {
       CHECK_ERROR(registers[target_register] == NULL,
                   "Target register is not in use");
 
+      printf("BEGIN READ\n");
       for (uint64_t i = 0; i < PAGE_SIZE; i++) {
         putc((*registers[target_register])[i], stdout);
       }
+      printf("\nEND READ\n");
+    } break;
+
+    case 'f': {
+      ret = buffer_flush_unpinned(&manager);
+      CHECK_ERROR(ret, "Error flushing");
+
+      printf("FLUSH\n");
     } break;
     }
   }
