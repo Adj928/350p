@@ -1,6 +1,6 @@
 /**
  * @file page.h
- * @author Oliver Kennedy
+ * @author YOUR NAME HERE
  */
 
 #include "conventions.h"
