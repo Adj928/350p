@@ -7,7 +7,7 @@ TEST_DIR := ./tests
 SRC_FILES := $(shell find $(SRC_DIR) -name '*.c')
 OBJ_FILES := $(SRC_FILES:$(SRC_DIR)/%.c=$(BUILD_DIR)/%.o)
 DEP_FILES := $(OBJ_FILES:.o=.d)
-TESTS := $(shell find $(TEST_DIR) -name '*.test')
+TESTS := $(shell find $(TEST_DIR) -name '*.test' | sort)
 
 CFLAGS := -O2 -MMD -MP
 
