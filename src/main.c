@@ -94,6 +94,7 @@ int main(int argc, char **argv) {
         CHECK_ERROR(ret, "Error flushing");
 
         printf("FLUSH\n");
+        fflush(stdout);
       } break;
       }
     }
