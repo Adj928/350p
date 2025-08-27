@@ -28,7 +28,12 @@ As a reminder, you may **not** use coding assistants on this project.
 
 #### Working with C
 
-This course assumes that you have taken CSE 220 or an equivalent course and have an environment set up for working with C (e.g., the 220 VM).  You are encouraged to use a text editor such as Emacs, Sublime, Vim/Neovim, Helix, etc...  Your instructor is an old fogie and may not be able to help you if you use a "modern" IDE that hides all of its activities behind several layers of abstraction. 
+This course assumes that you have taken CSE 220 or an equivalent course and have an environment set up for working with C.  Suggested environments include:
+1. A computer running linux
+2. The 220 VM
+3. CSE Compute Servers (turing.cse.buffalo.edu or cerf.cse.buffalo.edu)
+
+You are encouraged to use a text editor such as Emacs, Sublime, Vim/Neovim, Helix, etc...  Your instructor is an old fogie and may not be able to help you if you use a "modern" IDE that hides all of its activities behind several layers of abstraction.
 
 This project comes with a Makefile.  Feel free to edit it as you see fit.
 
