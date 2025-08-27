@@ -9,13 +9,13 @@ OBJ_FILES := $(SRC_FILES:$(SRC_DIR)/%.c=$(BUILD_DIR)/%.o)
 DEP_FILES := $(OBJ_FILES:.o=.d)
 TESTS := $(shell find $(TEST_DIR) -name '*.test' | sort)
 
-CFLAGS := -O2 -MMD -MP
+CFLAGS := -O3 -MMD -MP -std=gnu17
 
 all: $(TARGET)
 
 $(TARGET): $(OBJ_FILES)
 	@echo "\033[94m"Linking $@ from $(OBJ_FILES) "\033[0m"o
-	$(CC) $(OBJ_FILES) -o $@ $(LD_FLAGS)
+	$(CC) $(CFLAGS) $(OBJ_FILES) -o $@ $(LD_FLAGS)
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
 	@mkdir -p $(dir $@)
@@ -24,7 +24,7 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
 
 run: $(TARGET)
 	@echo "\033[94mRunning" $(TARGET) "\033[0m"
-	./$(TARGET)
+	./$(TARGET) -
 
 test: $(TARGET)
 	@echo "\033[94mRunning tests...\033[0m"
