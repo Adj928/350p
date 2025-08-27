@@ -51,6 +51,7 @@ int main(int argc, char **argv) {
       switch (cmd) {
       case 'h': {
         printf("Hello World!\n");
+        fflush(stdout);
       } break;
 
       case 'W': {
@@ -68,6 +69,7 @@ int main(int argc, char **argv) {
         CHECK_ERROR(ret, "Error writing page");
 
         printf("WRITE_FRAME\n");
+        fflush(stdout);
       } break;
 
       case 'R': {
@@ -76,13 +78,14 @@ int main(int argc, char **argv) {
         ret = fscanf(cmd_file, "%lu", &target_page);
         CHECK_ERROR(ret < 0, "Error parsing target page");
 
+        ret = page_read(db_file, target_page, temp_frame);
+
         printf("BEGIN PAGE_READ\n");
         for (uint64_t i = 0; i < PAGE_SIZE; i++) {
           putc(temp_frame[i], stdout);
         }
         printf("\nEND PAGE_READ\n");
-
-        ret = page_read(db_file, target_page, temp_frame);
+        fflush(stdout);
 
       } break;
 
