@@ -45,11 +45,11 @@ Result page_read(FILE *file, PageID page_id, Frame frame);
 Result page_write(FILE *file, PageID page_id, Frame frame);
 ```
 
-You may define additional functions, structures, types, etc... as needed.  However note that you will only be submitting `buffer.c`, so keep changes to other files minimal. 
+You may define additional functions, structures, types, etc... as needed.  However note that you will only be submitting `page.c`, so keep changes to other files minimal. 
 
 #### Testing
 
-The main function for this project implements a toy REPL that you may use for testing.  A simple example may be found in `tests/0.test`.  After you run this test, the file `database.350` should contain exactly 32 lines of 31 underscores, followed by a like number of hyphens and asterisks each.
+The main function for this project implements a toy REPL that you may use for testing.  A simple example may be found in `tests/0.test`.  After you run this test, the file `database.350` should contain exactly 16 lines of 64 underscores, followed by a like number of hyphens and asterisks each.
 
 
 Available commands include
