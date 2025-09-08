@@ -79,6 +79,7 @@ int main(int argc, char **argv) {
         CHECK_ERROR(ret < 0, "Error parsing target page");
 
         ret = page_read(db_file, target_page, temp_frame);
+        CHECK_ERROR(ret, "Error reading page");
 
         printf("BEGIN PAGE_READ\n");
         for (uint64_t i = 0; i < PAGE_SIZE; i++) {
