@@ -40,6 +40,11 @@ git remote add origin YOUR_REPOSITORY_URL_HERE
 git push -u origin main
 ```
 
+To receive project updates, you can now run 
+```
+git merge project/main
+```
+
 #### Working with C
 
 This course assumes that you have taken CSE 220 or an equivalent course and have an environment set up for working with C.  Suggested environments include:
