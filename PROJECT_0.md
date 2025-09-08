@@ -26,6 +26,20 @@ You may use any function provided in a standard LIBC header file, including:
 
 As a reminder, you may **not** use coding assistants on this project.
 
+#### Checking out the repository
+
+Check out a copy of the repository:
+```
+git clone https://git.odin.cse.buffalo.edu/CSE-350/2025-fa-project.git
+```
+
+Since you do not have commit access to this repository, you are encouraged to set up your own (private) repository, e.g., on [Codeberg](https://codeberg.org/), GitLab, etc...
+```
+git remote rename origin project
+git remote add origin YOUR_REPOSITORY_URL_HERE
+git push -u origin main
+```
+
 #### Working with C
 
 This course assumes that you have taken CSE 220 or an equivalent course and have an environment set up for working with C.  Suggested environments include:
