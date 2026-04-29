@@ -1,6 +1,6 @@
 /**
  * @file page.c
- * @author YOUR NAME HERE
+ * @author Adonis Jackson
  */
 
 #include "conventions.h"
@@ -12,7 +12,23 @@
 /// @param[out] frame    A reference to the frame to write into
 Result page_read(FILE *file, PageID page_id, Frame frame) {
   // TODO
-  return ERROR;
+  if(file ==NULL || frame== NULL){
+      return ERROR;
+    }
+  //calculate offset
+  long offset = (page_id * PAGE_SIZE);
+
+  int res = fseek(file,offset, SEEK_SET);
+  if(res != 0){
+    return ERROR;
+  }
+
+  size_t Byteread = fread(frame, 1, PAGE_SIZE, file);
+  if(Byteread != PAGE_SIZE){
+    return ERROR; 
+  }
+
+  return SUCCESS;
 }
 
 /// @brief Write the contents of a frame onto a page
@@ -21,5 +37,22 @@ Result page_read(FILE *file, PageID page_id, Frame frame) {
 /// @param[in] frame     A reference to the frame to read from
 Result page_write(FILE *file, PageID page_id, Frame frame) {
   // TODO
-  return ERROR;
+  if(file ==NULL || frame== NULL){
+      return ERROR;
+  }
+  long offset = (page_id * PAGE_SIZE);
+
+  int res = fseek(file,offset, SEEK_SET);
+  if(res != 0){
+    return ERROR;
+  }
+
+  size_t Bytewrite = fwrite(frame, 1, PAGE_SIZE,file);
+  if(Bytewrite != PAGE_SIZE){
+    return ERROR;
+  }
+
+  return SUCCESS;
+    
 }
+
