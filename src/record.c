@@ -83,9 +83,7 @@ Result record_field_get(Record *record, size_t field_index, void **value,
   *length = end - start;
   return SUCCESS;
 }
-#define FOOTER_FIELD(page, i)                                                  \
-  ((unsigned short *)page)[PAGE_SIZE / sizeof(unsigned short) - 1 - (i)]
-#define UNALLOCATED ((255 << 8) + 255)
+
 /// @brief Initialize a record page
 /// @param[in] page        A page of data to be initialized as a record page
 ///
@@ -112,11 +110,13 @@ Result record_field_get(Record *record, size_t field_index, void **value,
 /// * Bytes 34-35: The first byte of record 0 (0)
 /// * Bytes 32-33: THe first byte of record 1 (8)
 Result record_page_init(Frame *page) {
-  bzero(page, PAGE_SIZE); 
+  bzero(page, PAGE_SIZE);
   return SUCCESS;
 }
 
-
+#define FOOTER_FIELD(page, i)                                                  \
+  ((unsigned short *)page)[PAGE_SIZE / sizeof(unsigned short) - 1 - (i)]
+#define UNALLOCATED ((255 << 8) + 255)
 
 /// @brief The count of the number of allocated records
 /// @param page  The page to query
