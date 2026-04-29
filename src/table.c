@@ -1,3 +1,8 @@
+/**
+ * @file table.c
+ * @author Adonis Jackson
+ */
+
 #include "buffer.h"
 #include "conventions.h"
 #include "table.h"
