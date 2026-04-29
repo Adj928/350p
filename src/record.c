@@ -1,3 +1,8 @@
+/**
+ * @file record.c
+ * @author Adonis Jackson
+ */
+
 #include "conventions.h"
 #include "record.h"
 #include <stdint.h>
