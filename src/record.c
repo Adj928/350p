@@ -1,22 +1,33 @@
 #include "conventions.h"
 #include "record.h"
-#include "string.h"
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+
+#ifndef DEBUG_RECORD
+#define DEBUG_RECORD 0
+#endif
+#define DEBUG                                                                  \
+  if (DEBUG_RECORD)                                                            \
+  printf
+
+#define RECORD_HEADER_SIZE(fields) ((fields + 2) * sizeof(short int))
+
 /// @brief Obtain the length (in bytes) of the provided record.
 /// @param[in] record  The record to obtain the length of.
 /// @return            The number of bytes required to store record.
-size_t record_length(Record *record) { 
-  if(record == NULL){
-    return 0;
-  }
-   uint16_t *meta = (uint16_t *)record;
-  size_t fieldcount = meta[0];
-  size_t total = sizeof(uint16_t) * (fieldcount + 1);
-  
-  for (size_t i = 0; i < fieldcount; i++) {
-        total += meta[i+1];
-    }
+size_t record_length(Record *record) {
+  unsigned short *header = (unsigned short *)record;
+  unsigned short field_count = header[0];
+  return header[field_count + 1];
+}
 
-  return total;
+size_t estimate_length(size_t field_count, size_t field_length[]) {
+  size_t needed_bytes = RECORD_HEADER_SIZE(field_count);
+  for (int i = 0; i < field_count; i++) {
+    needed_bytes += field_length[i];
+  }
+  return needed_bytes;
 }
 
 /// @brief Encode an array of boxed fields into a record.
@@ -35,42 +46,22 @@ size_t record_length(Record *record) {
 /// records.  In general, you shoult treat the data values in each field as
 /// completely opaque (let the caller worry about what's stored there). Just
 /// make sure to track the length of each field.
-Result record_create(Record *record, size_t field_count, Field field_data[],size_t field_length[], size_t max_bytes) {
-  if(record==NULL){
+Result record_create(Record *record, size_t field_count, Field field_data[],
+                     size_t field_length[], size_t max_bytes) {
+  if (estimate_length(field_count, field_length) > max_bytes) {
     return ERROR;
   }
-  if(field_count>0 && field_data==NULL){
-    return ERROR;
+  unsigned short *header = (unsigned short *)record;
+  header[0] = field_count;
+  unsigned short offset = RECORD_HEADER_SIZE(field_count);
+  header[1] = offset;
+  for (int i = 0; i < field_count; i++) {
+    char *target = ((char *)record) + offset;
+    DEBUG("Offset: %d -> %p (header @ %p)\n", offset, target, header);
+    memcpy(target, field_data[i], field_length[i]);
+    offset += field_length[i];
+    header[i + 2] = offset;
   }
-   if(field_count>0 && field_length==NULL){
-    return ERROR;
-  }
-  uint16_t *meta = (uint16_t *)record;
-  size_t headb = sizeof(uint16_t) * (field_count + 1);
-  size_t datab = 0;
-  for (size_t i = 0; i < field_count; i++) {
-     datab += field_length[i];
-  }
-  size_t total = datab + headb;
-  if(total>max_bytes){
-    return ERROR;
-  }
-
-  meta[0] = field_count;
-  for (size_t i = 0; i < field_count; i++) {
-      meta[i+1] = field_length[i];
-    }
-
-  
-    unsigned char *base = (unsigned char *)record;
-    size_t off = headb;
-    for (size_t i = 0; i < field_count; i++) {
-    if (field_length[i] > 0 && field_data[i] != NULL) {
-        memcpy(base + off, field_data[i], field_length[i]);
-        off += field_length[i];
-    }
-}
-
   return SUCCESS;
 }
 
@@ -85,36 +76,16 @@ Result record_create(Record *record, size_t field_count, Field field_data[],size
 ///                        address
 Result record_field_get(Record *record, size_t field_index, void **value,
                         size_t *length) {
-  if(record==NULL){
-    return ERROR;
-  }
-  if(value == NULL){
-    return ERROR;
-  }
-  if(length == NULL){
-    return ERROR;
-  }
-  uint16_t *meta = (uint16_t *)record;
-  size_t fieldcount = meta[0];
-  size_t headb = sizeof(uint16_t) * (fieldcount + 1);
-
-  if(field_index>= fieldcount){
-    return ERROR;
-  }
-
-  unsigned char *base = (unsigned char *)record;
-  size_t off = headb;
-   
-  for (size_t i = 0; i < field_index; i++) {
-    off += meta[i + 1];
-  }
-
-  *value = base + off;
-  *length = meta[field_index + 1];
-
+  unsigned short *header = (unsigned short *)record;
+  unsigned short start = header[1 + field_index];
+  unsigned short end = header[2 + field_index];
+  *value = (void *)(((char *)record) + start);
+  *length = end - start;
   return SUCCESS;
 }
-
+#define FOOTER_FIELD(page, i)                                                  \
+  ((unsigned short *)page)[PAGE_SIZE / sizeof(unsigned short) - 1 - (i)]
+#define UNALLOCATED ((255 << 8) + 255)
 /// @brief Initialize a record page
 /// @param[in] page        A page of data to be initialized as a record page
 ///
@@ -141,18 +112,11 @@ Result record_field_get(Record *record, size_t field_index, void **value,
 /// * Bytes 34-35: The first byte of record 0 (0)
 /// * Bytes 32-33: THe first byte of record 1 (8)
 Result record_page_init(Frame *page) {
-  if(page==NULL){
-    return ERROR;
-  }
-  //* Bytes 38-39: The number of records 'allocated' (2)
-  uint8_t *pageby = (uint8_t *)page;
-  *( uint16_t *)(pageby + PAGE_SIZE - 2) = 0;
-  
-  //Bytes 36-37: The first 'free' byte (18)
-  
-  *( uint16_t *)(pageby + PAGE_SIZE - 4) = 1;
+  bzero(page, PAGE_SIZE); 
+  return SUCCESS;
+}
 
-  return SUCCESS; }
+
 
 /// @brief The count of the number of allocated records
 /// @param page  The page to query
@@ -162,10 +126,7 @@ Result record_page_init(Frame *page) {
 /// The function record_page_get() should behave correctly
 /// if called on any index between 0 and the value returned
 /// by this function.
-size_t record_page_count(Frame *page) { 
-  uint8_t *pageby = (uint8_t *)page;
-  size_t countofrec = *(uint16_t *)(pageby + PAGE_SIZE - 2);
-  return countofrec; }
+size_t record_page_count(Frame *page) { return FOOTER_FIELD(page, 0); }
 
 /// @brief Create a record on the provided page (see record_field_create).
 /// @param[in] page         The page to put the record into
@@ -182,63 +143,55 @@ size_t record_page_count(Frame *page) {
 /// even then, then put should fail.
 Result record_page_put(Frame *page, size_t field_count, Field field_data[],
                        size_t field_length[], size_t *index) {
-  if(page==NULL){
-    return ERROR;
-  }
-  if(index==NULL){
-    return ERROR;
-  }
-  if(field_count>0){
-    if(field_data==NULL){
+
+  unsigned short footer_size = (FOOTER_FIELD(page, 0) + 2) * 2;
+  unsigned short next_free = FOOTER_FIELD(page, 1);
+  DEBUG("Writing at %d (%d already used with %d records)\n", next_free,
+        footer_size + next_free, FOOTER_FIELD(page, 0));
+  unsigned short available = PAGE_SIZE - footer_size - next_free;
+  Result ret;
+
+  // If there's not enough space, then try to defragment
+  if (estimate_length(field_count, field_length) >= available) {
+    ret = record_page_defragment(page);
+    if (ret) {
+      return ret;
+    }
+
+    // On a successful defragment, the free pointer and available space will
+    // change
+    next_free = FOOTER_FIELD(page, 1);
+    available = PAGE_SIZE - footer_size - next_free;
+    DEBUG("Defragment successful\n");
+    if (estimate_length(field_count, field_length) >= available) {
+      DEBUG("... but still not enough space\n");
       return ERROR;
     }
-    if(field_length==NULL){
-    return ERROR;
+  }
+  unsigned short selected_index = UNALLOCATED;
+  for (int i = 0; i < FOOTER_FIELD(page, 0); i++) {
+    if (FOOTER_FIELD(page, i + 2) == UNALLOCATED) {
+      selected_index = i;
+      break;
     }
   }
-  uint8_t *pageby = (uint8_t *)page;
+  if (selected_index == UNALLOCATED) {
+    selected_index = FOOTER_FIELD(page, 0);
+    FOOTER_FIELD(page, 0) += 1;
+  }
+  DEBUG("Writing index %d\n", selected_index);
 
-   uint16_t reccount = *( uint16_t *)(pageby + PAGE_SIZE - 2);
-  
-  
-   uint16_t freep = *( uint16_t *)(pageby + PAGE_SIZE - 4);
+  Record *record = (Record *)(((char *)page) + next_free);
+  ret = record_create(record, field_count, field_data, field_length, available);
+  if (ret) {
+    return ret;
+  }
+  unsigned short record_size = record_length(record);
+  FOOTER_FIELD(page, 1) += record_size;
+  FOOTER_FIELD(page, selected_index + 2) = next_free;
+  *index = selected_index;
 
-  size_t total = sizeof(uint16_t) * (field_count + 1);
-
-  for (size_t i = 0; i < field_count; i++) {
-        total += field_length[i];
-    }
-
-   size_t need = (reccount + 1) * 2 + 4;
-    if (PAGE_SIZE < total + freep + need ) {
-        if (record_page_defragment(page) != SUCCESS){
-           return ERROR;
-        }
-        
-        reccount = *( uint16_t*)(pageby + PAGE_SIZE - 2);
-        freep = *( uint16_t*)(pageby + PAGE_SIZE - 4);
-
-        if (PAGE_SIZE< total + freep + need) {
-            return ERROR; 
-        }
-    }
-
-    if (record_create((Record *)((uint8_t *)page + freep), field_count, field_data, field_length,total) != SUCCESS) {
-        return ERROR;
-    }
-
-    size_t idbyte = reccount * 2;
-    size_t firstb = PAGE_SIZE - 6;
-    size_t off = firstb - idbyte;
-    *( uint16_t *)(pageby + off) = freep;
-
-    *( uint16_t*)(pageby + PAGE_SIZE - 4) = freep + total;
-    *( uint16_t *)(pageby + PAGE_SIZE - 2) = reccount + 1;
-    
-
-    *index = reccount;  
-
-    return SUCCESS;
+  return SUCCESS;
 }
 
 /// @brief Replace a record on the provided page (see record_field_create).
@@ -255,43 +208,47 @@ Result record_page_put(Frame *page, size_t field_count, Field field_data[],
 /// even then, then put should fail.
 Result record_page_update(Frame *page, size_t field_count, Field field_data[],
                           size_t field_length[], size_t index) {
-  if(page==NULL){
-    return ERROR;
-  }
-  if(field_count>0){
-    if(field_data==NULL){
-      return ERROR;
-    }
-    if(field_length==NULL){
-    return ERROR;
-    }
-  }
-  uint8_t *pageby = (uint8_t *)page;
-   uint16_t reccount = *( uint16_t *)(pageby + PAGE_SIZE - 2);
-    if (index >= reccount) {
-        return ERROR;
-    }
-  size_t idbyte = index * 2;
-  //firstbyte
-  size_t firstb = PAGE_SIZE - 6;
-  size_t off = firstb - idbyte;
+  Result ret;
 
-  uint16_t lastpage = *(uint16_t*)(pageby + off);
-  if(lastpage == 0 ){
-    return ERROR; //Page already gone
-  }
-  *( uint16_t*)(pageby + off) = 0;
-  size_t i = 0;
-  if (record_page_put(page, field_count, field_data, field_length, &i) != SUCCESS) {
-    return ERROR;
-}
-    size_t updateoff = PAGE_SIZE - 6 - (i * 2);
-     uint16_t updatepa = *( uint16_t *)(pageby + updateoff);
+  Record *existing_record =
+      (Record *)((char *)page + FOOTER_FIELD(page, 2 + index));
+  unsigned short existing_size = record_length(existing_record);
 
-    *( uint16_t *)(pageby + off) = updatepa;
-
-
+  // Try to re-use the existing space if possible, but limit creation by the
+  // existing size of the record
+  ret = record_create(existing_record, field_count, field_data, field_length,
+                      existing_size);
+  if (ret == SUCCESS) {
     return SUCCESS;
+  }
+
+  unsigned short footer_size = (FOOTER_FIELD(page, 0) + 2) * 2;
+  unsigned short next_free = FOOTER_FIELD(page, 1);
+  unsigned short available = PAGE_SIZE - footer_size - next_free;
+
+  Record *record = (Record *)(((char *)page) + next_free);
+  ret = record_create(record, field_count, field_data, field_length, available);
+  if (ret) {
+    // not enough space.  Defrag and try again
+    record_page_delete(page, index);
+    ret = record_page_defragment(page);
+    if (ret) {
+      return ret;
+    }
+    next_free = FOOTER_FIELD(page, 1);
+    available = PAGE_SIZE - footer_size - next_free;
+    record = (Record *)(((char *)page) + next_free);
+    ret =
+        record_create(record, field_count, field_data, field_length, available);
+    if (ret) {
+      return ret;
+    }
+  }
+  unsigned short record_size = record_length(record);
+  FOOTER_FIELD(page, 1) += record_size;
+  FOOTER_FIELD(page, index + 2) = next_free;
+
+  return SUCCESS;
 }
 
 /// @brief Delete a record from the provided page
@@ -302,25 +259,7 @@ Result record_page_update(Frame *page, size_t field_count, Field field_data[],
 /// should remain at index N even after deletion.  One way to accomplish this is
 /// to use a special index value to signify a deleted record.
 Result record_page_delete(Frame *page, size_t index) {
-   if (page == NULL) {
-    return ERROR;
-  }
-  uint8_t *pageby = (uint8_t *)page;
-   uint16_t countofrec = 0;
-  countofrec = *( uint16_t *)(pageby + PAGE_SIZE - 2);
-
-  if(index>=countofrec){
-    return ERROR;
-  }
-
-  //index times bytes
-  size_t idbyte = index * 2;
-  //firstbyte
-  size_t firstb = PAGE_SIZE - 6;
-  size_t off = firstb - idbyte;
-  
-  *( uint16_t *)(pageby + off) = 0;
-
+  FOOTER_FIELD(page, index + 2) = UNALLOCATED;
   return SUCCESS;
 }
 
@@ -333,34 +272,10 @@ Result record_page_delete(Frame *page, size_t index) {
 ///                        ERROR otherwise, such as for example if the record
 ///                        at this index was deleted.
 Result record_page_get(Frame *page, size_t index, Record **record) {
-  if(page == NULL){
+  if (FOOTER_FIELD(page, index + 2) == UNALLOCATED) {
     return ERROR;
   }
-  if(record==NULL){
-    return ERROR;
-  }
-  uint8_t *pageby = (uint8_t *)page;
-   uint16_t countofrec = 0;
-  countofrec = *( uint16_t *)(pageby + PAGE_SIZE - 2);
-  
-  if(index>=countofrec){
-    return ERROR;
-  }
-
-  //index times bytes
-  size_t idbyte = index * 2;
-  //firstbyte
-  size_t firstb = PAGE_SIZE - 6;
-  size_t off = firstb - idbyte;
-
-   uint16_t Offpage = *( uint16_t *)(pageby + off);
-  
-  //checkifpageexist
-  if(Offpage==0){
-    return ERROR;
-  }
-  *record = (Record *)(pageby + Offpage);
-
+  *record = (void *)(((char *)page) + FOOTER_FIELD(page, index + 2));
   return SUCCESS;
 }
 
@@ -369,38 +284,30 @@ Result record_page_get(Frame *page, size_t index, Record **record) {
 ///
 /// Rearrange the layout of the records on the provided page to free up space
 /// from e.g., deleted records.
-Result record_page_defragment(Frame *page) { 
-  if(page==NULL){
-    return ERROR;
-  }
-  uint8_t *pageby = (uint8_t *)page;
-   uint16_t countofrec = 0;
-  countofrec = *( uint16_t *)(pageby + PAGE_SIZE - 2);
-   uint16_t freepoint = 0;
-   for (size_t i = 0; i < countofrec; i++) {
-        size_t idbyte = i * 2;
-  //firstbyte
-        size_t firstb = PAGE_SIZE - 6;
-        size_t off = firstb - idbyte;
-
-        uint16_t Offpage = *(uint16_t *)(pageby + off);
-        // deleted records
-        if (Offpage == 0) {
-            continue;
-        }
-
-        Record *currec = (Record *)(pageby + Offpage);
-        size_t rlen = record_length(currec);  
-
-        if (Offpage != freepoint) {
-            memmove(pageby + freepoint, currec, rlen);
-        }
-
-
-        *(uint16_t *)(pageby + off) = freepoint;
-
-        
-        freepoint += rlen;
+Result record_page_defragment(Frame *page) {
+  DEBUG("Defragmenting page (%u next free)\n", FOOTER_FIELD(page, 1));
+  Frame buffer;
+  memcpy(&buffer, page, PAGE_SIZE);
+  bzero(page, PAGE_SIZE);
+  FOOTER_FIELD(page, 0) = FOOTER_FIELD(&buffer, 0);
+  unsigned short next_free = 0;
+  DEBUG("defragmenting %p -> %p\n", &buffer, page);
+  for (int i = 0; i < FOOTER_FIELD(&buffer, 0); i++) {
+    if (FOOTER_FIELD(&buffer, 2 + i) != UNALLOCATED) {
+      Record *buffer_record =
+          (void *)(((char *)&buffer) + FOOTER_FIELD(&buffer, 2 + i));
+      unsigned short length = record_length(buffer_record);
+      Record *page_record = (void *)(((char *)page) + next_free);
+      DEBUG("copying record %u (%u bytes) from %p to %p\n", i, length,
+            buffer_record, page_record);
+      memcpy(page_record, buffer_record, length);
+      FOOTER_FIELD(page, 2 + i) = next_free;
+      next_free += length;
+    } else {
+      FOOTER_FIELD(page, 2 + i) = UNALLOCATED;
     }
-    *(uint16_t *)(pageby + PAGE_SIZE -4) = freepoint;
-  return SUCCESS; }
+  }
+  DEBUG("After defrag, next free byte at %u\n", next_free);
+  FOOTER_FIELD(page, 1) = next_free;
+  return SUCCESS;
+}
