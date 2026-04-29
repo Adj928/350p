@@ -1,3 +1,8 @@
+/**
+ * @file isam.c
+ * @author Adonis Jackson
+ */
+
 #include "conventions.h"
 #include "record.h"
 #include "utilities.h"
